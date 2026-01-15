@@ -1,0 +1,11 @@
+symptom_body_pain
+symptom_dry_mouth
+symptom_fainting
+symptom_fatigue
+symptom_fever
+symptom_frequent_urination
+symptom_headache
+symptom_low_activity
+symptom_thirst
+symptom_weakness
+symptom_weight_loss
