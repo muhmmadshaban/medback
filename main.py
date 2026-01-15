@@ -63,7 +63,7 @@ def load_ml_model():
         print("🚀 Loading ML model...")
         
         # Load the model
-        with open('ml_model/model.pkl', 'rb') as f:
+        with open('ml_model/final_rural_health_model.pkl', 'rb') as f:
             model = pickle.load(f)
         
         # Check if model has feature names attribute
