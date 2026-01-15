@@ -35,7 +35,6 @@ class PatientData(BaseModel):
     symptom_frequent_urination: int = 0
     symptom_headache: int = 0
     symptom_low_activity: int = 0
-    symptom_nausea: int = 0
     symptom_thirst: int = 0
     symptom_weakness: int = 0
     symptom_weight_loss: int = 0
@@ -90,7 +89,7 @@ def load_ml_model():
                 'symptom_chills', 'symptom_cough', 'symptom_dizziness',
                 'symptom_dry_mouth', 'symptom_fainting', 'symptom_fatigue',
                 'symptom_fever', 'symptom_frequent_urination', 'symptom_headache',
-                'symptom_low_activity', 'symptom_nausea', 'symptom_thirst',
+                'symptom_low_activity', 'symptom_thirst',
                 'symptom_weakness', 'symptom_weight_loss'
             ]
         
@@ -135,7 +134,6 @@ def prepare_features(patient_data: PatientData):
         patient_data.symptom_frequent_urination,
         patient_data.symptom_headache,
         patient_data.symptom_low_activity,
-        patient_data.symptom_nausea,
         patient_data.symptom_thirst,
         patient_data.symptom_weakness,
         patient_data.symptom_weight_loss
@@ -344,7 +342,6 @@ async def test_prediction():
         "symptom_frequent_urination": 0,
         "symptom_headache": 1,
         "symptom_low_activity": 0,
-        "symptom_nausea": 0,
         "symptom_thirst": 0,
         "symptom_weakness": 0,
         "symptom_weight_loss": 0
