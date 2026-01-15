@@ -63,9 +63,9 @@ def load_ml_model():
         print("🚀 Loading ML model...")
         
         # Load the model
-        with open('ml_model/final_rural_health_model.pkl', 'rb') as f:
-            model = pickle.load(f)
-        
+        from joblib import load
+        model = load('ml_model/final_rural_health_model.pkl')
+        print("✅ Model loaded with joblib")
         # Check if model has feature names attribute
         if hasattr(model, 'feature_names_in_'):
             expected_features = list(model.feature_names_in_)
