@@ -21,8 +21,13 @@ class PatientData(BaseModel):
     Blood_Sugar_mg_dL: int
     BMI: float
     
-    # Symptoms (0 or 1 for each)
+    # ALL 16 symptoms (0 or 1 for each)
     symptom_body_pain: int = 0
+    symptom_breathing_difficulty: int = 0
+    symptom_chest_pain: int = 0
+    symptom_chills: int = 0
+    symptom_cough: int = 0
+    symptom_dizziness: int = 0
     symptom_dry_mouth: int = 0
     symptom_fainting: int = 0
     symptom_fatigue: int = 0
@@ -30,6 +35,7 @@ class PatientData(BaseModel):
     symptom_frequent_urination: int = 0
     symptom_headache: int = 0
     symptom_low_activity: int = 0
+    symptom_nausea: int = 0
     symptom_thirst: int = 0
     symptom_weakness: int = 0
     symptom_weight_loss: int = 0
@@ -63,9 +69,11 @@ def load_ml_model():
         print("🚀 Loading ML model...")
         
         # Load the model
+      # Load the model
         from joblib import load
         model = load('ml_model/final_rural_health_model.pkl')
         print("✅ Model loaded with joblib")
+        
         # Check if model has feature names attribute
         if hasattr(model, 'feature_names_in_'):
             expected_features = list(model.feature_names_in_)
@@ -74,13 +82,15 @@ def load_ml_model():
                 print(f"   {i+1}. {feat}")
         else:
             print("⚠️ Model doesn't have feature names attribute")
-            # Create expected features list based on your input format
+            # Create expected features list with ALL 24 features
             expected_features = [
                 'Age', 'Systolic_BP', 'Diastolic_BP', 'Body_Temperature_Celsius',
                 'Heart_Rate_bpm', 'Blood_Sugar_mg_dL', 'BMI', 'Gender_Male',
-                'symptom_body_pain', 'symptom_dry_mouth', 'symptom_fainting',
-                'symptom_fatigue', 'symptom_fever', 'symptom_frequent_urination',
-                'symptom_headache', 'symptom_low_activity', 'symptom_thirst',
+                'symptom_body_pain', 'symptom_breathing_difficulty', 'symptom_chest_pain',
+                'symptom_chills', 'symptom_cough', 'symptom_dizziness',
+                'symptom_dry_mouth', 'symptom_fainting', 'symptom_fatigue',
+                'symptom_fever', 'symptom_frequent_urination', 'symptom_headache',
+                'symptom_low_activity', 'symptom_nausea', 'symptom_thirst',
                 'symptom_weakness', 'symptom_weight_loss'
             ]
         
@@ -97,8 +107,9 @@ def prepare_features(patient_data: PatientData):
     # Convert gender to binary
     gender_male = 1 if patient_data.Gender.lower() == 'male' else 0
     
-    # Create feature array in EXACT order expected by model
+    # Create feature array with ALL 24 features in EXACT order
     features = np.array([[
+        # 1-7: Basic vitals
         patient_data.Age,
         patient_data.Systolic_BP,
         patient_data.Diastolic_BP,
@@ -106,8 +117,17 @@ def prepare_features(patient_data: PatientData):
         patient_data.Heart_Rate_bpm,
         patient_data.Blood_Sugar_mg_dL,
         patient_data.BMI,
+        
+        # 8: Gender_Male (True/False as 1/0)
         gender_male,
+        
+        # 9-24: ALL 16 symptoms in exact order
         patient_data.symptom_body_pain,
+        patient_data.symptom_breathing_difficulty,
+        patient_data.symptom_chest_pain,
+        patient_data.symptom_chills,
+        patient_data.symptom_cough,
+        patient_data.symptom_dizziness,
         patient_data.symptom_dry_mouth,
         patient_data.symptom_fainting,
         patient_data.symptom_fatigue,
@@ -115,6 +135,7 @@ def prepare_features(patient_data: PatientData):
         patient_data.symptom_frequent_urination,
         patient_data.symptom_headache,
         patient_data.symptom_low_activity,
+        patient_data.symptom_nausea,
         patient_data.symptom_thirst,
         patient_data.symptom_weakness,
         patient_data.symptom_weight_loss
@@ -239,6 +260,10 @@ async def predict(patient_data: PatientData):
         # Prepare features
         features = prepare_features(patient_data)
         
+        # Debug: Print feature count
+        print(f"🔍 Sending {len(features[0])} features to model")
+        print(f"🔍 Model expects {model.n_features_in_} features")
+        
         # Make prediction
         prediction = model.predict(features)
         probabilities = model.predict_proba(features)
@@ -284,7 +309,8 @@ async def predict(patient_data: PatientData):
             "recommendations": recommendations,
             "top_predictions": top_predictions,
             "processing_time_ms": processing_time_ms,
-            "features_used": len(features[0]),
+            "features_sent": len(features[0]),
+            "model_expects": model.n_features_in_ if hasattr(model, 'n_features_in_') else "unknown",
             "timestamp": datetime.now().isoformat()
         }
         
@@ -306,6 +332,11 @@ async def test_prediction():
         "Blood_Sugar_mg_dL": 110,
         "BMI": 24.5,
         "symptom_body_pain": 0,
+        "symptom_breathing_difficulty": 0,
+        "symptom_chest_pain": 0,
+        "symptom_chills": 0,
+        "symptom_cough": 0,
+        "symptom_dizziness": 0,
         "symptom_dry_mouth": 0,
         "symptom_fainting": 0,
         "symptom_fatigue": 1,
@@ -313,6 +344,7 @@ async def test_prediction():
         "symptom_frequent_urination": 0,
         "symptom_headache": 1,
         "symptom_low_activity": 0,
+        "symptom_nausea": 0,
         "symptom_thirst": 0,
         "symptom_weakness": 0,
         "symptom_weight_loss": 0
@@ -320,6 +352,21 @@ async def test_prediction():
     
     patient_data = PatientData(**test_data)
     return await predict(patient_data)
+
+@app.get("/api/test-get")
+async def test_get():
+    """Simple GET test"""
+    return {
+        "message": "API is working",
+        "endpoints": {
+            "GET /": "Health check",
+            "GET /api/features": "Get model features",
+            "GET /api/model-info": "Get model info",
+            "POST /api/predict": "Make prediction",
+            "POST /api/test": "Test prediction",
+            "GET /api/test-get": "This endpoint"
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn
